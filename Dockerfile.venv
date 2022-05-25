@@ -1,0 +1,13 @@
+FROM python
+
+COPY ./requirements.txt /home
+#RUN python3 -m venv /home/venv
+
+#RUN . /home/venv/bin/activate && python3 -m pip install pyTelegramBotAPI mysql-connector-python
+
+#COPY main.py /home/main.py
+
+#WORKDIR /home
+
+CMD python3 -m venv /home/venv && . /home/venv/bin/activate && \
+	python3 -m pip install -r /home/requirements.txt

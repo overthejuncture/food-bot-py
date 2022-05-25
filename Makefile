@@ -1,17 +1,17 @@
-venv:
-	docker run --volume ~/py/:/home --workdir="/home" python python3 -m venv venv
+setvenv:
+	docker build --tag py:venv -f Dockerfile.venv .
+	docker run -v $$PWD/venv:/home/venv py:venv
 
-install-telebot:
-	docker run --volume $$PWD:/home --workdir="/home" python python3 -m pip install telebot
+after:
+	docker build --tag py .
+	docker run -v $$PWD/venv:/home/venv -v $$PWD/main.py:/home/main.py py
 
 runnod:
-	docker run -v $$PWD/main.py:/home/main.py py:main
+	docker run -v $$PWD/venv:/home/venv -v $$PWD/main.py:/home/main.py py
 
 run:
-	docker run -d -v $$PWD/main.py:/home/main.py py:main
+	docker run -d -v $$PWD/venv:/home/venv -v $$PWD/main.py:/home/main.py py
 
 bash:
-	docker run -it py:main bash
+	docker run -it -v $$PWD/venv:/home/venv -v $$PWD/main.py:/home/main.py py bash
 
-shit:
-	docker run -v $$PWD/venv:/home/venv --workdir="/home" python bash -c "python3 -m venv /home/venv && . /home/venv/bin/activate && python3 -m pip install pyTelegramBotAPI mysql-connector-python"
