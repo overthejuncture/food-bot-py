@@ -12,3 +12,6 @@ run:
 
 bash:
 	docker run -it py:main bash
+
+shit:
+	docker run -v $$PWD/venv:/home/venv --workdir="/home" python bash -c "python3 -m venv /home/venv && . /home/venv/bin/activate && python3 -m pip install pyTelegramBotAPI mysql-connector-python"
