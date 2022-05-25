@@ -37,7 +37,7 @@ bot = telebot.TeleBot('5324840661:AAFz8VR-ludW4212dz4GlXWNyjN6joXCxXQ')
 # Функция, обрабатывающая команду /start
 @bot.message_handler(commands=["start"])
 def start(m, res=False):
-    bot.send_message(m.chat.id, 'Я на связи. Напиши мне что-нибудь )')
+    bot.send_message(m.chat.id, 'Я на связи )')
 # Получение сообщений от юзера
 @bot.message_handler(commands=["list"])
 def handle_text(message):
