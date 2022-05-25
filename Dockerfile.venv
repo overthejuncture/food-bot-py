@@ -1,4 +1,4 @@
-FROM python
+FROM python:3.9.13
 
 COPY ./requirements.txt /home
 #RUN python3 -m venv /home/venv
