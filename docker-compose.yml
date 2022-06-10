@@ -10,6 +10,8 @@ services:
       - mysql
     links:
       - mysql
+    ports:
+      - "8000:8000"
     networks:
       - python-network
   mysql:
