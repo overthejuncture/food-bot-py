@@ -1,16 +1,20 @@
-from telegram.ext import Updater
-from telegram import Update
-import logging
-from telegram.ext import CallbackContext
-from telegram.ext import CommandHandler
-from bot.models import Choise
 from django.core.management.base import BaseCommand
+import logging
 import urllib.parse
 import random
-from telegram import InlineKeyboardButton
+
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup
+)
+from telegram.ext import (
+    CallbackContext,
+    CommandHandler,
+    Updater
+)
+from bot.models import Choise
 from typing import Union, List
-from telegram import InlineKeyboardButton
-from telegram import InlineKeyboardMarkup
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
@@ -66,6 +70,7 @@ class Command(BaseCommand):
         start_handler = CommandHandler('start', start)
         choose_handler = CommandHandler('choose', choose)
         add_handler = CommandHandler('add', add)
+        #choose_handler = ConversationHandler()
         dispatcher.add_handler(start_handler)
         dispatcher.add_handler(choose_handler)
         dispatcher.add_handler(add_handler)
