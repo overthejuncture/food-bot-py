@@ -1,3 +1,0 @@
-pyTelegramBotAPI
-mysql-connector-python
-mariadb

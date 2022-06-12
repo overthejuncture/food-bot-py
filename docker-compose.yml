@@ -2,18 +2,18 @@ version: '3'
 services:
   python:
     container_name: py
-    build:
-      context: ./images/python
+    image: python:3.9.13
     volumes:
       - './project:/home'
-    depends_on:
-      - mysql
+        #depends_on:
+        #- mysql
     links:
       - mysql
     ports:
       - "8000:8000"
     networks:
       - python-network
+    working_dir: /home
   mysql:
     container_name: mysql
     image: mysql:5.7
