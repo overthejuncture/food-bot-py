@@ -11,6 +11,8 @@ from telegram import (
 from telegram.ext import (
     CallbackContext,
     CommandHandler,
+    ConversationHandler,
+    CallbackQueryHandler,
     Updater
 )
 from bot.models import Choise
@@ -52,7 +54,7 @@ class Command(BaseCommand):
             ]
             reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=1))
             context.bot.send_message(chat_id=update.effective_chat.id, text=choise.text, reply_markup=reply_markup)
-            pass
+            return 0
 
         def build_menu(
             buttons: List[InlineKeyboardButton],
@@ -67,10 +69,19 @@ class Command(BaseCommand):
                 menu.append(footer_buttons if isinstance(footer_buttons, list) else [footer_buttons])
             return menu
 
+        def check_inactive(update: Update, context: CallbackContext):
+            context.bot.send_message(chat_id=update.effective_chat.id, text="afdsafdfa")
+
         start_handler = CommandHandler('start', start)
-        choose_handler = CommandHandler('choose', choose)
+        #choose_handler = CommandHandler('choose', choose)
         add_handler = CommandHandler('add', add)
-        #choose_handler = ConversationHandler()
+        choose_handler = ConversationHandler(
+            entry_points=[CommandHandler('choose', choose)],
+            states={
+                0: [CallbackQueryHandler(check_inactive)]
+            },
+            fallbacks=[]
+        )
         dispatcher.add_handler(start_handler)
         dispatcher.add_handler(choose_handler)
         dispatcher.add_handler(add_handler)
