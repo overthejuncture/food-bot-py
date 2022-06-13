@@ -62,9 +62,10 @@ class Command(BaseCommand):
             choises = Choise.objects.all()
             choise = random.choice(choises)
             buttons = [
-                InlineKeyboardButton("Да", callback_data=json.dumps({'id': choise.id, 'text':"yes"}))
+                InlineKeyboardButton("Да", callback_data=json.dumps({'id': choise.id, 'text':"yes"})),
+                InlineKeyboardButton("Нет", callback_data=json.dumps({'id': choise.id, 'text':"no"}))
             ]
-            reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=1))
+            reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
             context.bot.send_message(chat_id=update.effective_chat.id, text=choise.text, reply_markup=reply_markup)
             return 0
 
@@ -86,12 +87,10 @@ class Command(BaseCommand):
             data = json.loads(update.callback_query.data)
             if data.get('text') == 'yes':
                 #set inactive
-                context.bot.send_message(chat_id=update.effective_chat.id, text='swag')
                 choise = Choise.objects.get(pk=data.get('id'))
                 choise.active = False
                 choise.save()
-                pass
-            context.bot.send_message(chat_id=update.effective_chat.id, text=update.callback_query.data)
+                context.bot.send_message(chat_id=update.effective_chat.id, text="Рецепт добавлен в неактивные")
             return ConversationHandler.END
 
         def reset_inactive(update: Update, context: CallbackContext):
