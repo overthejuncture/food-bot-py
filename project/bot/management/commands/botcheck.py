@@ -70,7 +70,9 @@ class Command(BaseCommand):
             return menu
 
         def check_inactive(update: Update, context: CallbackContext):
-            context.bot.send_message(chat_id=update.effective_chat.id, text="afdsafdfa")
+            update.callback_query.edit_message_reply_markup(None)
+            context.bot.send_message(chat_id=update.effective_chat.id, text=update.callback_query.data)
+            return ConversationHandler.END
 
         start_handler = CommandHandler('start', start)
         #choose_handler = CommandHandler('choose', choose)

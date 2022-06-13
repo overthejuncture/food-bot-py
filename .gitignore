@@ -2,3 +2,5 @@ project/venv/*
 .idea
 .vscode
 .env
+__pycache__/
+*.py[cod]
