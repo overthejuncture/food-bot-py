@@ -94,9 +94,18 @@ class Command(BaseCommand):
             context.bot.send_message(chat_id=update.effective_chat.id, text=update.callback_query.data)
             return ConversationHandler.END
 
+        def reset_inactive(update: Update, context: CallbackContext):
+            inactive = Choise.objects.filter(active=False)
+            for choise in inactive:
+                choise.active=True
+                #todo bulk_update
+                choise.save()
+            update.message.reply_text("Список неактивных рецептов был очищен")
+
         list_handler = CommandHandler('list', list)
         #choose_handler = CommandHandler('choose', choose)
         add_handler = CommandHandler('add', add)
+        reset_inactive_handler = CommandHandler('reset_inactive', reset_inactive)
         choose_handler = ConversationHandler(
             entry_points=[CommandHandler('choose', choose)],
             states={
@@ -105,6 +114,7 @@ class Command(BaseCommand):
             fallbacks=[]
         )
         dispatcher.add_handler(list_handler)
+        dispatcher.add_handler(reset_inactive_handler)
         dispatcher.add_handler(choose_handler)
         dispatcher.add_handler(add_handler)
 
