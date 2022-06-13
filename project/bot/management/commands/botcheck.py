@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 import logging
 import urllib.parse
 import random
+import json
 
 from telegram import (
     Update,
@@ -25,18 +26,29 @@ class Command(BaseCommand):
         updater = Updater(token='5496803027:AAHYR1Qp5wI-ooEhMWGkYNB7YnQ89nDpVcg')
         dispatcher = updater.dispatcher
 
-        def start(update: Update, context: CallbackContext):
-            choises = Choise.objects.all()
-            reply_text = ''
+        def list(update: Update, context: CallbackContext):
+            inactive_choises = Choise.objects.filter(active=False)
+            active_choises = Choise.objects.filter(active=True)
+            reply_text = "Активные варианты:\n"
             strings = []
-            for idx, choise in enumerate(choises):
-                txt = "{idx}. {text} {active}"
-                strings.append(reply_text + txt.format(idx=idx+1, text=choise.text, active = 'yes' if choise.active else 'no'))
+            for idx, choise in enumerate(active_choises):
+                txt = "{idx}. {text}"
+                strings.append(txt.format(idx=idx+1, text=choise.text, active = 'yes' if choise.active else 'no'))
             if strings:
-                update.message.reply_text("\n".join(strings))
+                reply_text = reply_text + "\n".join(strings)
             else:
-                update.message.reply_text("No data")
+                reply_text = reply_text + "-"
+            reply_text = reply_text + "\n\nНеактивные варианты:\n"
+            strings = []
+            for idx, choise in enumerate(inactive_choises):
+                txt = "{idx}. {text}"
+                strings.append(txt.format(idx=idx+1, text=choise.text, active = 'yes' if choise.active else 'no'))
+            if strings:
+                reply_text = reply_text + "\n".join(strings)
+            else:
+                reply_text = reply_text + "-"
 
+            update.message.reply_text(reply_text)
         def add(update: Update, context: CallbackContext):
             if not context.args:
                 context.bot.send_message(chat_id=update.effective_chat.id, text="Нужно ввести текст после команды, например: /add Фуагра со спаржей")
@@ -50,7 +62,7 @@ class Command(BaseCommand):
             choises = Choise.objects.all()
             choise = random.choice(choises)
             buttons = [
-                InlineKeyboardButton("Да", callback_data="yes")
+                InlineKeyboardButton("Да", callback_data=json.dumps({'id': choise.id, 'text':"yes"}))
             ]
             reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=1))
             context.bot.send_message(chat_id=update.effective_chat.id, text=choise.text, reply_markup=reply_markup)
@@ -71,10 +83,18 @@ class Command(BaseCommand):
 
         def check_inactive(update: Update, context: CallbackContext):
             update.callback_query.edit_message_reply_markup(None)
+            data = json.loads(update.callback_query.data)
+            if data.get('text') == 'yes':
+                #set inactive
+                context.bot.send_message(chat_id=update.effective_chat.id, text='swag')
+                choise = Choise.objects.get(pk=data.get('id'))
+                choise.active = False
+                choise.save()
+                pass
             context.bot.send_message(chat_id=update.effective_chat.id, text=update.callback_query.data)
             return ConversationHandler.END
 
-        start_handler = CommandHandler('start', start)
+        list_handler = CommandHandler('list', list)
         #choose_handler = CommandHandler('choose', choose)
         add_handler = CommandHandler('add', add)
         choose_handler = ConversationHandler(
@@ -84,7 +104,7 @@ class Command(BaseCommand):
             },
             fallbacks=[]
         )
-        dispatcher.add_handler(start_handler)
+        dispatcher.add_handler(list_handler)
         dispatcher.add_handler(choose_handler)
         dispatcher.add_handler(add_handler)
 
