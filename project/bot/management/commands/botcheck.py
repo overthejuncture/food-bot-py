@@ -1,3 +1,4 @@
+from queue import Empty
 from django.core.management.base import BaseCommand
 import logging
 import urllib.parse
@@ -26,7 +27,7 @@ class Command(BaseCommand):
         updater = Updater(token='5496803027:AAHYR1Qp5wI-ooEhMWGkYNB7YnQ89nDpVcg')
         dispatcher = updater.dispatcher
 
-        def list(update: Update, context: CallbackContext):
+        def list_choises(update: Update, context: CallbackContext):
             inactive_choises = Choise.objects.filter(active=False)
             active_choises = Choise.objects.filter(active=True)
             reply_text = "Активные варианты:\n"
@@ -100,8 +101,72 @@ class Command(BaseCommand):
                 #todo bulk_update
                 choise.save()
             update.message.reply_text("Список неактивных рецептов был очищен")
+            
+        def check(update: Update, context: CallbackContext):
+            limit = 3
+            start = 0
+            update_message = False
 
-        list_handler = CommandHandler('list', list)
+            # if id in callback then send new message
+
+            if update.callback_query:
+                print('callback')
+                update_message = True
+                #context.bot.send_message(chat_id=update.effective_chat.id, text=update.callback_query.data)
+                data = json.loads(update.callback_query.data)
+                if data["action"] and data["action"] == 'next':
+                    start = data['start']
+                elif data["action"] and data["action"] == 'prev':
+                    start = data['start'] if int(data['start']) > 0 else 0
+                else:
+                    context.bot.send_message(chat_id=update.effective_chat.id, text="no data")
+
+            print("start: {start}".format(start=start))
+            choises = Choise.objects.all()[start:start + limit]
+            if not choises.exists():
+                return 0
+            buttons = []
+            strings = []
+            for idx, choise in enumerate(choises):
+                strings.append("{idx} {text}".format(idx=idx+1, text=choise.text))
+                buttons.append(
+                    InlineKeyboardButton(idx+1, callback_data=choise.id)
+                )
+            more_buttons = [
+            ]
+            if start > 0:
+                more_buttons.append(InlineKeyboardButton("Previous", callback_data=json.dumps({"start": start - limit, "action":"prev"})))
+            if Choise.objects.all()[start + limit:start + limit + 1]:
+                more_buttons.append(InlineKeyboardButton("Next", callback_data=json.dumps({"start": start + limit, "action":"next"})))
+
+            reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=2,footer_buttons=more_buttons))
+            if update_message:
+                update.callback_query.edit_message_text(text="\n".join(strings), reply_markup=reply_markup)
+                return 1
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text="\n".join(strings),
+                    reply_markup=reply_markup )
+                return 0
+
+        def choise_actions(update: Update, context: CallbackContext):
+            buttons = []
+            id = update.callback_query.data
+            #get chosen option through callback
+            context.bot.send_message(chat_id=update.effective_chat.id, text=id)
+            #show actions for chosen option
+            reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
+            context.bot.send_message(chat_id=update.effective_chat.id, reply_markup=reply_markup)
+            pass
+
+        list_handler = CommandHandler('list', list_choises)
+        # redo
+        check_handler = ConversationHandler(
+            entry_points=[CommandHandler('check', check)],
+            states={
+                0: [CallbackQueryHandler(check)]
+            },
+            fallbacks=[]
+        )
         #choose_handler = CommandHandler('choose', choose)
         add_handler = CommandHandler('add', add)
         reset_inactive_handler = CommandHandler('reset_inactive', reset_inactive)
@@ -115,6 +180,7 @@ class Command(BaseCommand):
         dispatcher.add_handler(list_handler)
         dispatcher.add_handler(reset_inactive_handler)
         dispatcher.add_handler(choose_handler)
+        dispatcher.add_handler(check_handler)
         dispatcher.add_handler(add_handler)
 
         updater.start_polling()
