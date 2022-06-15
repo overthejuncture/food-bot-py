@@ -13,6 +13,8 @@ services:
       - "8000:8000"
     networks:
       - python-network
+    environment:
+      - PATH=$VIRTUAL_ENV/bin:$PATH
     working_dir: /home
   mysql:
     container_name: mysql
