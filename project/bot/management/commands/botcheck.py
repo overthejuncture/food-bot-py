@@ -3,4 +3,4 @@ from bot import bot
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        bot.start()
+        bot.start_bot()

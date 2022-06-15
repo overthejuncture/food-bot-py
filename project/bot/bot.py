@@ -16,16 +16,20 @@ from telegram.ext import (
     CallbackQueryHandler,
     Updater
 )
-from bot.models import Choise
+from bot.models import (
+    Choise,
+    User
+)
 from typing import Union, List
 
-def start():
+def start_bot():
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
     updater = Updater(token='5496803027:AAHYR1Qp5wI-ooEhMWGkYNB7YnQ89nDpVcg')
     dispatcher = updater.dispatcher
 
     list_handler = CommandHandler('list', list_choises)
+    start_handler = CommandHandler('start', start)
     # redo
     check_handler = ConversationHandler(
         entry_points=[CommandHandler('check', check)],
@@ -46,6 +50,7 @@ def start():
         },
         fallbacks=[]
     )
+    dispatcher.add_handler(start_handler)
     dispatcher.add_handler(list_handler)
     dispatcher.add_handler(reset_inactive_handler)
     dispatcher.add_handler(choose_handler)
@@ -53,6 +58,14 @@ def start():
     dispatcher.add_handler(add_handler)
 
     updater.start_polling()
+
+def start(update: Update, context: CallbackContext):
+    id = update.message.from_user.id
+    update.message.reply_text(update.message.from_user.id)
+    if not User.objects.filter(telegram_id=id).exists():
+        user = User(telegram_id=id)
+        user.save()
+        update.message.reply_text('Юзер создан')
 
 def list_choises(update: Update, context: CallbackContext):
     inactive_choises = Choise.objects.filter(active=False)
