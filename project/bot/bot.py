@@ -30,7 +30,8 @@ def start():
     check_handler = ConversationHandler(
         entry_points=[CommandHandler('check', check)],
         states={
-            0: [CallbackQueryHandler(choise_actions)]
+            0: [CallbackQueryHandler(choise_actions)],
+            1: [CallbackQueryHandler(action)],
         },
         fallbacks=[],
         allow_reentry=True
@@ -133,10 +134,6 @@ def choise_actions(update: Update, context: CallbackContext):
     if 'id' in data:
         return show_choise_actions(update, context)
 
-    # if id in callback then send new message
-    #update.callback_query.bot.send_message(update.callback_query.message.chat_id, 'actions')
-    #context.bot.send_message(chat_id=update.effective_chat.id, text=update.callback_query.data)
-
 def next_and_prev(update: Update, context: CallbackContext):
     limit = 3
     data = json.loads(update.callback_query.data)
@@ -152,9 +149,18 @@ def show_choise_actions(update: Update, context: CallbackContext):
     data = json.loads(update.callback_query.data)
     choise = Choise.objects.get(pk=data['id'])
     buttons = [
-        InlineKeyboardButton(text="Удалить", callback_data='remove'),
-        InlineKeyboardButton(text="Изменить", callback_data='edit')
+        InlineKeyboardButton(text="Удалить", callback_data=json.dumps({'id': choise.id, 'action': 'remove'}))
+        # InlineKeyboardButton(text="Изменить", callback_data=json.dumps({'id': choise.id, 'action': 'edit'}))
     ]
     reply_markup = InlineKeyboardMarkup(utils.build_menu(buttons, n_cols=5))
     update.callback_query.bot.send_message(update.callback_query.message.chat_id, choise.text, reply_markup=reply_markup)
+    return 1
+
+def action(update: Update, context: CallbackContext):
+    update.callback_query.edit_message_reply_markup()
+    data = json.loads(update.callback_query.data)
+    if data['action'] == 'remove':
+        choise = Choise.objects.get(pk=data['id'])
+        choise.delete()
+        update.callback_query.message.reply_text('Удалено')
     pass
