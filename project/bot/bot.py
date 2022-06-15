@@ -2,6 +2,7 @@ import logging
 import urllib.parse
 import random
 import json
+from xml.sax.handler import ContentHandler
 from bot import utils
 
 from telegram import (
@@ -48,7 +49,8 @@ def start_bot():
         states={
             0: [CallbackQueryHandler(check_inactive)]
         },
-        fallbacks=[]
+        fallbacks=[],
+        allow_reentry=True,
     )
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(list_handler)
@@ -103,6 +105,9 @@ def add(update: Update, context: CallbackContext):
 def choose(update: Update, context: CallbackContext):
     user = User.objects.get(telegram_id=update.message.from_user.id)
     choises = user.choises.all()
+    if not choises:
+        update.message.reply_text('Нет вариантов')
+        return ConversationHandler.END
     choise = random.choice(choises)
     buttons = [
         InlineKeyboardButton("Да", callback_data=json.dumps({'id': choise.id, 'text':"yes"})),
@@ -134,7 +139,7 @@ def reset_inactive(update: Update, context: CallbackContext):
     
 def check(update: Update, context: CallbackContext):
     start = 0
-    limit = 3
+    limit = 10
 
     user = User.objects.get(telegram_id=update.message.from_user.id)
     choises = user.choises.all()[start:start + limit]
@@ -142,7 +147,7 @@ def check(update: Update, context: CallbackContext):
     show_previous_button = user.choises.all()[start + limit:start + limit + 1]
     reply_markup, strings = utils.getKeyboardForChoises(start, limit, choises, bool(show_previous_button))
 
-    context.bot.send_message(chat_id=update.effective_chat.id, text="\n".join(strings),
+    context.bot.send_message(chat_id=update.effective_chat.id, text="\n".join(strings) if strings else "-",
             reply_markup=reply_markup )
     return 0
 
@@ -155,7 +160,7 @@ def choise_actions(update: Update, context: CallbackContext):
         return show_choise_actions(update, context)
 
 def next_and_prev(update: Update, context: CallbackContext):
-    limit = 3
+    limit = 10
     data = json.loads(update.callback_query.data)
     start = data['start']
 

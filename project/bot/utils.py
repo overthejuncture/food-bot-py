@@ -29,10 +29,10 @@ def getKeyboardForChoises(start, limit, choises, show_previous_button):
         )
     more_buttons = []
     if start > 0:
-        more_buttons.append(InlineKeyboardButton("Previous", callback_data=json.dumps({"start": start - limit, "action":"prev"})))
+        more_buttons.append(InlineKeyboardButton("<", callback_data=json.dumps({"start": start - limit, "action":"prev"})))
     if show_previous_button:
-        more_buttons.append(InlineKeyboardButton("Next", callback_data=json.dumps({"start": start + limit, "action":"next"})))
+        more_buttons.append(InlineKeyboardButton(">", callback_data=json.dumps({"start": start + limit, "action":"next"})))
 
-    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=2,footer_buttons=more_buttons))
+    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=5,footer_buttons=more_buttons))
     return reply_markup, strings
 
