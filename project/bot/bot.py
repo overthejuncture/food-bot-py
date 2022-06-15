@@ -68,8 +68,10 @@ def start(update: Update, context: CallbackContext):
         update.message.reply_text('Юзер создан')
 
 def list_choises(update: Update, context: CallbackContext):
-    inactive_choises = Choise.objects.filter(active=False)
-    active_choises = Choise.objects.filter(active=True)
+    user = User.objects.get(telegram_id=update.message.from_user.id)
+    
+    inactive_choises = user.choises.filter(active=False)
+    active_choises = user.choises.filter(active=True)
 
     reply_text = "Активные варианты:\n"
     strings = []
@@ -93,11 +95,14 @@ def add(update: Update, context: CallbackContext):
         return
     ch = Choise(text=' '.join(context.args))
     ch.save()
+    user = User.objects.get(telegram_id=update.message.from_user.id)
+    user.choises.add(ch)
     reply_text = ' '.join(context.args)
     context.bot.send_message(chat_id=update.effective_chat.id, text="Добавлен вариант: \"" + reply_text + "\"")
 
 def choose(update: Update, context: CallbackContext):
-    choises = Choise.objects.all()
+    user = User.objects.get(telegram_id=update.message.from_user.id)
+    choises = user.choises.all()
     choise = random.choice(choises)
     buttons = [
         InlineKeyboardButton("Да", callback_data=json.dumps({'id': choise.id, 'text':"yes"})),
@@ -119,7 +124,8 @@ def check_inactive(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 def reset_inactive(update: Update, context: CallbackContext):
-    inactive = Choise.objects.filter(active=False)
+    user = User.objects.get(telegram_id=update.message.from_user.id)
+    inactive = user.choises.filter(active=False)
     for choise in inactive:
         choise.active=True
         #todo bulk_update
@@ -130,9 +136,10 @@ def check(update: Update, context: CallbackContext):
     start = 0
     limit = 3
 
-    choises = Choise.objects.all()[start:start + limit]
+    user = User.objects.get(telegram_id=update.message.from_user.id)
+    choises = user.choises.all()[start:start + limit]
 
-    show_previous_button = Choise.objects.all()[start + limit:start + limit + 1]
+    show_previous_button = user.choises.all()[start + limit:start + limit + 1]
     reply_markup, strings = utils.getKeyboardForChoises(start, limit, choises, bool(show_previous_button))
 
     context.bot.send_message(chat_id=update.effective_chat.id, text="\n".join(strings),
@@ -151,8 +158,10 @@ def next_and_prev(update: Update, context: CallbackContext):
     limit = 3
     data = json.loads(update.callback_query.data)
     start = data['start']
-    choises = Choise.objects.all()[start:start + limit]
-    show_previous_button = Choise.objects.all()[start + limit:start + limit + 1]
+
+    user = User.objects.get(telegram_id=update.callback_query.from_user.id)
+    choises = user.choises.all()[start:start + limit]
+    show_previous_button = user.choises.all()[start + limit:start + limit + 1]
     reply_markup, strings = utils.getKeyboardForChoises(data['start'], limit, choises, show_previous_button)
     update.callback_query.edit_message_text("\n".join(strings), reply_markup=reply_markup)
     pass

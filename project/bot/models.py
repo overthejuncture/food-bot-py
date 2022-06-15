@@ -13,7 +13,7 @@ class User(models.Model):
     choises = models.ManyToManyField('Choise', through="ChoiseUser")
 
     def __str__(self):
-        return "{id} {telegram_id}".format(self.id, self.telegram_id)
+        return "{id} {telegram_id}".format(id=self.id, telegram_id=self.telegram_id)
 
 class ChoiseUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
