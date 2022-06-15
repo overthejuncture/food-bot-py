@@ -3,12 +3,14 @@ from django.db import models
 class Choise(models.Model):
     text = models.CharField(max_length=200)
     active = models.BooleanField(default = True)
+    users = models.ManyToManyField('User', through="ChoiseUser")
 
     def __str__(self):
         return self.text
 
 class User(models.Model):
     telegram_id = models.TextField()
+    choises = models.ManyToManyField('Choise', through="ChoiseUser")
 
     def __str__(self):
         return "{id} {telegram_id}".format(self.id, self.telegram_id)

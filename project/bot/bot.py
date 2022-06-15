@@ -94,7 +94,7 @@ def add(update: Update, context: CallbackContext):
     ch = Choise(text=' '.join(context.args))
     ch.save()
     reply_text = ' '.join(context.args)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=reply_text)
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Добавлен вариант: \"" + reply_text + "\"")
 
 def choose(update: Update, context: CallbackContext):
     choises = Choise.objects.all()
